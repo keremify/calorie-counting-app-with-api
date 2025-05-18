@@ -7,13 +7,13 @@ import os
 import sqlite3
 
 
-load_dotenv()  # .env dosyalarını Golang çalışırken keyleri daha güvende tutmak için kullanıldığı öğrenmiştim. Bu projede de kullanmak istedim.
+load_dotenv()  # used dotenv for securing API key.
 
 api_key = os.getenv("COLLECT_API")
 
 Tr2En = str.maketrans("ÇĞİÖŞÜçğıöşüâ", "CGiOSUcgiosua")
 
-def mevsim_secim(event):
+def mevsim_secim(event): # choosing month
     ay = lbmevsim.get(tkinter.ACTIVE)
     conn.request("GET", "/food/whenFoods?ay="+ay, headers=headers)
     res = conn.getresponse()
@@ -31,11 +31,7 @@ def mevsim_secim(event):
         lbsonuc.insert(tkinter.END, f"🌿 Her Mevsim Yenen Sebzeler: {', '.join(her_zaman_sebze)}")
         lbsonuc.insert(tkinter.END, "")
     else:
-        lbsonuc.insert(tkinter.END, "Sonuç bulunamadı veya API yanıtı hatalı.")
-
-# Yapay zekadan büyük ölçüde yardım aldım bu kısımda. Çünkü mevsim yiyecekleri bana liste olarak geliyordu. Diğer kısımdaki gibi
-# for döngüsü kullanmak yerine if kullanarak durumu düzeltmek gerekiyormuş. Durumu yapay zeka çözmekte zorlandı.
-
+        lbsonuc.insert(tkinter.END, "Sonuç bulunamadı veya API yanıtı hatalı.") # Error
 
 def yiyecek_secim(event):
     yiyecek = lbyiyecek.get(tkinter.ACTIVE).translate(Tr2En)
@@ -52,12 +48,11 @@ def yiyecek_secim(event):
     if not veri["result"]:
         lbsonuc.insert(tkinter.END, "⚠️ Sonuç bulunamadı.")
 
-    # Scrollbar güncellemesi (yapay zeka kullanıldı)
     frame2_canvas.update_idletasks()
     frame2_canvas.config(scrollregion=frame2_canvas.bbox("all"))
 
 
-def topla_kalori(): #yapay zeka ile yapıldı
+def topla_kalori():
     toplam = 0
     secilenler = lbsonuc.curselection()
     for i in secilenler:
@@ -79,7 +74,7 @@ def kaydet_yiyecek():
     secilenler = lbsonuc.curselection()
     for i in secilenler:
         metin = lbsonuc.get(i)
-        # "Yiyecek İsmi = 123" formatında ise:
+        
         if "=" in metin:
             isim, kalori = metin.split("=")
             isim = isim.strip()
@@ -102,15 +97,15 @@ pen.grid_columnconfigure((0, 1, 2), weight=1, uniform="column")
 
 toplam_kalori_var = tkinter.StringVar(value="0 kcal")
 
-# 3 alana ayırdım (yapay zeka yardım aldım, uniform her sütunu eşit genişlikte olması için)
+
 pen.grid_columnconfigure(0, weight=1, uniform="column")
 pen.grid_columnconfigure(1, weight=1, uniform="column")
 pen.grid_columnconfigure(2, weight=1, uniform="column")
 
-# Besinler
+# Foods
 frame1 = tkinter.Frame(pen, borderwidth=2, relief="groove", bd=5)
 frame1_canvas = Canvas(frame1)
-frame1.grid(row=0, column=0, sticky="nsew")  # Çerçeveyi genişletmek için sticky eklendi (AI)
+frame1.grid(row=0, column=0, sticky="nsew") 
 lbyiyecek = tkinter.Listbox(frame1, height=20, bg="white", font="Calibri", selectbackground="green")
 ttk.Label(frame1, text="🥗 BESİNLER", font="Calibri 20",background="green",foreground="white").pack(pady=5)
 scrollbaryiyecek = Scrollbar(lbyiyecek, orient="vertical", command=frame1_canvas.yview)
@@ -122,13 +117,12 @@ for i in open("yiyecekler.txt", encoding="utf-8"):
     lbyiyecek.insert(tkinter.END, i[:-1])
 lbyiyecek.bind('<Double-1>', yiyecek_secim)
 
-# Sonuçlar
+# Results
 frame2 = tkinter.Frame(pen, borderwidth=2, relief="groove",bd=5, width=300)
-frame2.grid(row=0, column=1, sticky="nsew") #sticky kısmında AI kullandım, pencere boyutuna göre ölçeklemek için)
+frame2.grid(row=0, column=1, sticky="nsew") 
 ttk.Label(frame2, text="📋 SONUÇ", font="Calibri 20",background="green",foreground="white").pack(pady=5)
 lbsonuc = tkinter.Listbox(frame2, height=20, bg="white", font="Calibri", selectbackground="green",selectmode="multiple")
 lbsonuc.pack(fill="both", expand=True)
-# Canvas ve Scrollbar ile kaydırılabilir alan (yapay zeka yardımı)
 frame2_canvas = Canvas(frame2)
 frame2_canvas.pack(side="left", fill="y", expand=True)
 scrollbarsonuc1 = Scrollbar(lbsonuc, orient="vertical", command=frame2_canvas.yview)
@@ -147,9 +141,9 @@ entry_toplam = ttk.Entry(frame2, textvariable=toplam_kalori_var, state="readonly
 entry_toplam.pack(pady=(0, 10), ipadx=10)
 
 
-# Mevsimler
+# Months
 frame3 = tkinter.Frame(pen, borderwidth=2, relief="groove", bd=5)
-frame3.grid(row=0, column=2, sticky="nsew")  # Çerçeveyi genişletmek için sticky eklendi (AI)
+frame3.grid(row=0, column=2, sticky="nsew") 
 ttk.Label(frame3, text="🌤️ MEVSİMLER", font="Calibri 20",background="green",foreground="white").pack(pady=5)
 lbmevsim = tkinter.Listbox(frame3, height=20, bg="white", font="Calibri", selectbackground="green")
 lbmevsim.pack(fill="both", expand=True)
@@ -160,7 +154,7 @@ lbmevsim.bind('<Double-1>', mevsim_secim)
 frame2_content = tkinter.Frame(frame2_canvas)
 frame2_canvas.create_window((0, 0), window=frame2_content, anchor="nw")
 
-# Veritabanı
+# Database Create
 conn_db = sqlite3.connect("kayitli_yiyecekler.db")
 cursor = conn_db.cursor()
 cursor.execute("""
@@ -173,7 +167,7 @@ CREATE TABLE IF NOT EXISTS yiyecekler (
 
 conn_db.commit()
 
-ttk.Button(frame2, text="Kaydet", command=kaydet_yiyecek).pack(anchor="center", fill="x")
+ttk.Button(frame2, text="Kaydet", command=kaydet_yiyecek).pack(anchor="center", fill="x") # applying to database
 
 pen.mainloop()
 conn_db.close()
